@@ -21,147 +21,144 @@ import java.util.List;
 
 public class QuizPageActivity extends AppCompatActivity {
 
-    private List<QuizQuestion> quizQuestions;  // 问题列表
-    private int currentQuestionIndex = 0;  // 当前问题索引
-    private LinearLayout parentLayout;  // 容纳所有卡片的布局
-    private LinearLayout questionLayout;  // 原来的布局
-    private Button nextButton;  // "NEXT" 按钮
+    private List<QuizQuestion> quizQuestions;  // List of quiz questions
+    private int currentQuestionIndex = 0;  // Index of the current question
+    private LinearLayout parentLayout;  // Layout that holds the question cards
+    private LinearLayout questionLayout;  // The original layout for questions
+    private Button nextButton;  // The "NEXT" button for navigating questions
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.quiz_page);  // 设置布局
+        setContentView(R.layout.quiz_page);  // Set the activity's layout
 
-        parentLayout = findViewById(R.id.parentLayout);  // 获取父布局
-        questionLayout = findViewById(R.id.question);  // 获取原来的布局
-        nextButton = findViewById(R.id.nextButton);  // 获取 "NEXT" 按钮
+        // Initialize key UI elements
+        parentLayout = findViewById(R.id.parentLayout);  // Parent layout containing question cards
+        questionLayout = findViewById(R.id.question);  // The original question layout
+        nextButton = findViewById(R.id.nextButton);  // The "NEXT" button
 
-        // 从 Intent 中获取 JSON 数据
+        // Retrieve JSON quiz data from the Intent
         Intent intent = getIntent();
         String quizData = intent.getStringExtra("quiz_data");
 
+        // Check if quiz data is valid
         if (quizData == null) {
             Toast.makeText(this, "No quiz data available.", Toast.LENGTH_SHORT).show();
-            return;
+            return;  // Exit if no quiz data
         }
 
-        // 解析 JSON 数据
+        // Parse the JSON data to get quiz questions
         Gson gson = new Gson();
         QuizResponse quizResponse = gson.fromJson(quizData, QuizResponse.class);
 
         if (quizResponse == null || quizResponse.getQuiz().isEmpty()) {
             Toast.makeText(this, "Invalid quiz data.", Toast.LENGTH_SHORT).show();
-            return;
+            return;  // Exit if the parsed data is empty or invalid
         }
 
-        quizQuestions = quizResponse.getQuiz();  // 获取问题列表
-//        String s = quizQuestions.get(0).getQuestion();
-//        Log.d("question",s);
+        // Store the list of quiz questions
+        quizQuestions = quizResponse.getQuiz();  // Get the list of quiz questions
 
-        // 隐藏原来的布局
+        // Hide the original question layout
         questionLayout.setVisibility(View.GONE);
 
-        // 显示第一道题
-        addQuestionCard(currentQuestionIndex);  // 添加第一题
+        // Display the first question card
+        addQuestionCard(currentQuestionIndex);
 
+        // Set click listener for the "NEXT" button
         nextButton.setOnClickListener(view -> {
-            currentQuestionIndex++;  // 增加索引
+            currentQuestionIndex++;  // Move to the next question
 
             if (currentQuestionIndex < quizQuestions.size()) {
-                // 添加新卡片
-                addQuestionCard(currentQuestionIndex);
+                addQuestionCard(currentQuestionIndex);  // Add a new question card
             }
 
+            // If it's the last question, change the button text to "Submit"
             if (currentQuestionIndex == quizQuestions.size() - 1) {
-                // 如果是最后一个问题，将按钮文本改为 "Submit"
-                nextButton.setText("Submit");
+                nextButton.setText("Submit");  // Change button text to "Submit"
 
-                // 更改按钮逻辑，例如提交结果
-                nextButton.setOnClickListener(submitView -> {
-                    // 执行提交操作
-                    submitQuizResults();
-                });
+                // Change the button click logic to submit quiz results
+                nextButton.setOnClickListener(submitView -> submitQuizResults());
             }
         });
     }
 
     private void addQuestionCard(int questionIndex) {
+        // Create a new card layout for the question
         LinearLayout cardView = new LinearLayout(this);
         cardView.setOrientation(LinearLayout.VERTICAL);
         cardView.setPadding(16, 16, 16, 16);
-        cardView.setBackgroundResource(R.drawable.questionbg);  // 使用背景图
+        cardView.setBackgroundResource(R.drawable.questionbg);  // Set the background
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,  // 宽度
-                LinearLayout.LayoutParams.WRAP_CONTENT   // 高度
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.bottomMargin = 16;  // 设置底部边界
+        params.bottomMargin = 16;  // Set bottom margin for the card
 
         cardView.setLayoutParams(params);
 
-        // 获取当前问题
+        // Get the current quiz question
         QuizQuestion currentQuestion = quizQuestions.get(questionIndex);
 
-        // 设置问题编号
+        // Set question number
         TextView questionNumber = new TextView(this);
         questionNumber.setText("Question #" + (questionIndex + 1));
         questionNumber.setTextColor(ContextCompat.getColor(this, R.color.black));
         questionNumber.setTextSize(18f);
 
-        // 设置问题文本
+        // Set question text
         TextView questionText = new TextView(this);
         questionText.setText(currentQuestion.getQuestion());
         questionText.setTextColor(ContextCompat.getColor(this, R.color.black));
         questionText.setTextSize(18f);
 
-        // 添加 RadioGroup 及其选项
+        // Create a RadioGroup for the quiz options
         RadioGroup radioGroupOptions = new RadioGroup(this);
-        // new
-        radioGroupOptions.setId(questionIndex + 1001);
-
+        radioGroupOptions.setId(questionIndex + 1001);  // Unique ID for the RadioGroup
         radioGroupOptions.setOrientation(LinearLayout.VERTICAL);
 
+        // Add quiz options to the RadioGroup
         for (String option : currentQuestion.getOptions()) {
             RadioButton radioButton = new RadioButton(this);
             radioButton.setText(option);
-            radioGroupOptions.addView(radioButton);  // 将 RadioButton 添加到选项组
+            radioGroupOptions.addView(radioButton);  // Add the RadioButton to the RadioGroup
         }
 
+        // Add components to the card
         cardView.addView(questionNumber);
         cardView.addView(questionText);
         cardView.addView(radioGroupOptions);
 
-        // 将 cardView 添加到 parentLayout 中 "NEXT" 按钮的上方
-        parentLayout.addView(cardView, parentLayout.getChildCount() - 1);  // 添加到 "NEXT" 按钮的上方
+        // Add the card to the parent layout
+        parentLayout.addView(cardView, parentLayout.getChildCount() - 1);  // Insert before the "NEXT" button
     }
 
     private void submitQuizResults() {
-        ArrayList<QuizQuestion> allQuestions = new ArrayList<>();  // 所有问题
-        int i = 1001;
+        ArrayList<QuizQuestion> allQuestions = new ArrayList<>();  // List of all quiz questions
+        int i = 1001;  // Starting ID for RadioGroup
         for (QuizQuestion question : quizQuestions) {
+            // Get the RadioGroup for the current question
             RadioGroup radioGroup = parentLayout.findViewById(i);
-            int selectedId = radioGroup.getCheckedRadioButtonId();
+            int selectedId = radioGroup.getCheckedRadioButtonId();  // Get the selected RadioButton ID
             Log.d("answer index", String.valueOf(selectedId));
-            Log.d("correct answer", question.getCorrectAnswer());
-            Log.d("question", question.getQuestion());
 
+            // If an answer is selected, get its text
             if (selectedId != -1) {
                 RadioButton selectedButton = parentLayout.findViewById(selectedId);
                 question.setUserAnswer(selectedButton.getText().toString());
-                Log.d("answer index", selectedButton.getText().toString());
-
             } else {
-                question.setUserAnswer(null);  // 如果没有选择答案，设置为 null
+                question.setUserAnswer(null);  // No answer selected
             }
 
-            allQuestions.add(question);  // 添加到所有问题列表
-            i++;
+            allQuestions.add(question);  // Add the question to the list
+            i++;  // Increment the ID
         }
 
-        // 使用 `Intent` 传递数据
+        // Create an Intent to navigate to the ResultPageActivity
         Intent intent = new Intent(this, ResultPageActivity.class);
-        intent.putParcelableArrayListExtra("all_questions", allQuestions);  // 传递数据
+        intent.putParcelableArrayListExtra("all_questions", allQuestions);  // Pass the list of quiz questions
 
-        startActivity(intent);  // 启动 `ResultPageActivity`
+        startActivity(intent);  // Start the ResultPageActivity
     }
 }

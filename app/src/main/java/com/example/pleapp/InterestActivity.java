@@ -56,8 +56,8 @@ public class InterestActivity extends AppCompatActivity {
                 return;
             }
 
-            saveInterests();  // 保存兴趣选择
-            finish();  // 结束当前活动
+            saveInterests();
+            finish();
         });
     }
 
@@ -69,7 +69,7 @@ public class InterestActivity extends AppCompatActivity {
     private void toggleInterest(Button button, String interest) {
         if (selectedInterests.contains(interest)) {
             selectedInterests.remove(interest);
-            button.setBackgroundResource(R.drawable.buttonbg);  // 恢复默认背景
+            button.setBackgroundResource(R.drawable.buttonbg);
         } else {
             if (selectedInterests.size() >= MAX_INTERESTS) {
                 Toast.makeText(this, "You can select up to 3 topics.", Toast.LENGTH_SHORT).show();
@@ -77,7 +77,6 @@ public class InterestActivity extends AppCompatActivity {
             }
             selectedInterests.add(interest);
             int color = ContextCompat.getColor(this, R.color.pressBtn_color);
-            button.setBackgroundColor(color);  // 改变按钮颜色
         }
     }
     private void saveInterests() {
